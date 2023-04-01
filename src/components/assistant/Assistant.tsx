@@ -15,9 +15,18 @@ export default function Assistant() {
 
     useEffect(() => {
         if (jobId) {
-            subscribe(jobId)
+            const interval = setInterval(async () => {
+                const { data } = await axios.get(`${VITE_API_URL}/jobs/${jobId}`)
+                if (data.state === 'completed') {
+                    setOutput(data.job.returnvalue)
+                    setIsFetching(false)
+                    clearInterval(interval)
+                } else {
+                    // Processing
+                }
+            }, 1000)
         }
-    }, [jobId, subscribe])
+    }, [jobId])
 
     function handleChange(input: string) {
         setInput(input)
@@ -29,41 +38,12 @@ export default function Assistant() {
             setIsFetching(true)
             setOutput("")
             try {
-
                 const { data: { id } } = await axios.post(`${VITE_API_URL}/jobs`, { input })
-
-                // const response = await fetch(`${VITE_API_URL}/jobs`, {
-                //     method: 'POST',
-                //     body: JSON.stringify({ input })
-                // })
                 setJobId(id)
             } catch (error) {
                 console.error(error)
             }
         }
-    }
-
-    function subscribe(jobId: string) {
-        console.log(`subscribe: ${jobId}`)
-        const CHANNEL = "any"
-        // supabase.channel(CHANNEL)
-        //     .on("postgres_changes", {
-        //         event: "UPDATE",
-        //         schema: "public",
-        //         table: "jobs",
-        //         filter: `id=eq.${jobId}`
-        //     }, (payload) => {
-        //         console.log(payload)
-        //         setOutput(payload.new.output)
-        //         supabase.removeAllChannels()
-        //         setIsFetching(false)
-        //     }).subscribe((status, error) => {
-        //         console.log("status", status)
-        //         if (error) {
-        //             console.error(error)
-        //         }
-        //     })
-        setIsFetching(false)
     }
 
     return (
